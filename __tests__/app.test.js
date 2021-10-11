@@ -28,31 +28,71 @@ describe('app routes', () => {
       return client.end(done);
     });
 
-    test('returns animals', async() => {
+    let createdTodo = null;
+
+    test('POST /api/todos adds a todo', async () => {
+      const newTodo = {
+        todo: 'JUST DO IT'
+      };
+
+      const expectation = {
+        todo: 'JUST DO IT',
+        user_id: expect.any(Number),
+        completed: false,
+        id: expect.any(Number)
+      };
+
+      const data = await fakeRequest(app)
+        .post('/api/todos')
+        .send(newTodo)
+        .set('Authorization', token)
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      //store the response for later tests
+      createdTodo = data.body;
+      expect(data.body).toEqual(expectation);
+    });
+
+    test('GET /api/todos returns todos', async () => {
 
       const expectation = [
         {
-          'id': 1,
-          'name': 'bessie',
-          'cool_factor': 3,
-          'owner_id': 1
-        },
-        {
-          'id': 2,
-          'name': 'jumpy',
-          'cool_factor': 4,
-          'owner_id': 1
-        },
-        {
-          'id': 3,
-          'name': 'spot',
-          'cool_factor': 10,
-          'owner_id': 1
+          todo: 'JUST DO IT',
+          user_id: expect.any(Number),
+          completed: false,
+          id: expect.any(Number)
         }
       ];
 
       const data = await fakeRequest(app)
-        .get('/animals')
+        .get('/api/todos')
+        .set('Authorization', token)
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(data.body).toEqual(expectation);
+    });
+
+    test('PUT /api/todos updates a todo', async () => {
+      const updatedTodo = {
+        todo: 'idk',
+        completed: true,
+        todo_id: createdTodo.id,
+        user_id: createdTodo.user_id
+      };
+
+      const expectation = {
+        todo: 'idk',
+        completed: true,
+        id: createdTodo.id,
+        user_id: createdTodo.user_id
+      };
+
+      const data = await fakeRequest(app)
+        .put('/api/todos')
+        .send(updatedTodo)
+        .set('Authorization', token)
         .expect('Content-Type', /json/)
         .expect(200);
 
